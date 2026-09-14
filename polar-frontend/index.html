@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POLARIS | National Polar Logistics & Expedition Management</title>
+    <meta name="description" content="National Centre for Polar and Ocean Research (NCPOR) - Polar Mission Operations & Logistics Management Platform">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Leaflet CSS -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❄️</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ==========================================================================
+         1. DEDICATED FULL-SCREEN LOGIN PAGE (Shown when unauthenticated)
+         ========================================================================== -->
+    <div id="login-screen" class="login-screen-wrapper">
+        <div class="login-card-container">
+            <div class="login-brand-header">
+                <div class="login-brand-icon"><i class="fa-solid fa-snowflake"></i></div>
+                <h1 class="login-brand-title">POLARIS</h1>
+                <p class="login-brand-subtitle">National Centre for Polar and Ocean Research (NCPOR)<br>Ministry of Earth Sciences • Government of India</p>
+            </div>
+
+            <!-- Quick-fill Demo Personas (Convenient 1-Click Fill) -->
+            <div style="margin-bottom: 12px;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--color-navy-500); text-transform: uppercase; letter-spacing: 0.5px;">Authorized Roles (Click to autofill)</span>
+            </div>
+            
+            <div class="login-persona-grid">
+                <button type="button" class="login-persona-pill active" onclick="app.fillLogin('admin', 'Admin@123', this)">
+                    <i class="fa-solid fa-crown" style="color:var(--color-primary);"></i>
+                    <span>HQ Admin</span>
+                </button>
+                <button type="button" class="login-persona-pill" onclick="app.fillLogin('coordinator', 'Coord@123', this)">
+                    <i class="fa-solid fa-clipboard-check" style="color:#0284c7;"></i>
+                    <span>Logistics Coord</span>
+                </button>
+                <button type="button" class="login-persona-pill" onclick="app.fillLogin('commander_maitri', 'Cmd@123', this)">
+                    <i class="fa-solid fa-mountain" style="color:#10b981;"></i>
+                    <span>Maitri Cmd</span>
+                </button>
+                <button type="button" class="login-persona-pill" onclick="app.fillLogin('commander_bharati', 'Cmd@123', this)">
+                    <i class="fa-solid fa-snowflake" style="color:#059669;"></i>
+                    <span>Bharati Cmd</span>
+                </button>
+                <button type="button" class="login-persona-pill" onclick="app.fillLogin('member', 'User@123', this)">
+                    <i class="fa-solid fa-user" style="color:#6366f1;"></i>
+                    <span>Exp. Member</span>
+                </button>
+            </div>
+
+            <div class="login-divider">Sign In with Credentials</div>
+
+            <!-- Standard Credentials Form -->
+            <form id="form-login" onsubmit="app.handleLoginSubmit(event)">
+                <div class="form-group">
+                    <label for="login-username">Operator Username</label>
+                    <input type="text" id="login-username" class="form-control" value="admin" placeholder="Enter username" required autocomplete="username">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" class="form-control" value="Admin@123" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <div id="login-error-msg" style="display:none; color:var(--color-danger); font-size:12px; margin-bottom:12px; font-weight:600;"></div>
+
+                <button type="submit" id="btn-login-submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In to Mission Control
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         2. AUTHENTICATED APPLICATION ROOT (Shown after successful login)
+         ========================================================================== -->
+    <div id="app-root" style="display:none;">
+        
+        <!-- Active Emergency Urgent Banner (Dynamic) -->
+        <div id="emergency-banner" class="emergency-banner hidden">
+            <div class="banner-content">
+                <div class="banner-text">
+                    <span class="banner-badge"><i class="fa-solid fa-triangle-exclamation"></i> ACTIVE SOS ALERT</span>
+                    <span id="banner-title" class="banner-msg">Emergency Incident detected in polar sector</span>
+                </div>
+                <div class="banner-actions">
+                    <button class="btn btn-sm btn-outline" style="background:#fff; color:#b91c1c; border:none;" onclick="app.switchTab('emergency')">
+                        <i class="fa-solid fa-bolt"></i> View Incident Hub
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Command Navigation Bar -->
+        <header class="top-nav">
+            <div class="nav-left">
+                <div class="brand-logo">
+                    <div class="brand-icon"><i class="fa-solid fa-snowflake"></i></div>
+                    <div class="brand-text">
+                        <div class="brand-title">
+                            POLARIS
+                            <span class="brand-badge">NCPOR</span>
+                        </div>
+                        <span class="brand-subtitle">Ministry of Earth Sciences • Government of India</span>
+                    </div>
+                </div>
+                
+                <div class="connection-status">
+                    <span class="status-dot live" id="backend-status-dot"></span>
+                    <span id="backend-status-text">SYSTEM ONLINE</span>
+                </div>
+            </div>
+
+            <div class="nav-center">
+                <div class="time-clocks-bar">
+                    <div class="clock-item">
+                        <span class="clock-label">UTC</span>
+                        <span class="clock-val" id="clock-utc">00:00:00</span>
+                    </div>
+                    <div class="clock-divider"></div>
+                    <div class="clock-item">
+                        <span class="clock-label">MAITRI (UTC+0)</span>
+                        <span class="clock-val" id="clock-maitri">00:00:00</span>
+                    </div>
+                    <div class="clock-divider"></div>
+                    <div class="clock-item">
+                        <span class="clock-label">BHARATI (UTC+5)</span>
+                        <span class="clock-val" id="clock-bharati">00:00:00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-right">
+                <!-- Admin View-As Switchboard (Strictly visible ONLY for Admin) -->
+                <div id="admin-persona-container" class="admin-persona-container" style="display:none;">
+                    <span class="admin-persona-label"><i class="fa-solid fa-user-gear"></i> Admin View:</span>
+                    <select id="admin-persona-select" class="admin-persona-select" onchange="app.adminSwitchPersona(this.value)">
+                        <option value="admin">👑 HQ Administrator (All Access)</option>
+                        <option value="coordinator">📋 Cape Town Logistics Coordinator</option>
+                        <option value="commander_maitri">🏔️ Maitri Station Commander</option>
+                        <option value="commander_bharati">❄️ Bharati Station Commander</option>
+                        <option value="member">👤 Expedition Member (Field)</option>
+                    </select>
+                </div>
+
+                <!-- User Profile Pill & Sign Out -->
+                <div class="user-profile-menu">
+                    <div class="user-avatar-circle" id="user-avatar-circle">AD</div>
+                    <div class="user-meta">
+                        <span class="user-display-name" id="user-display-name">Admin</span>
+                        <span class="user-display-role" id="user-display-role">ROLE_HQ_ADMIN</span>
+                    </div>
+                    <button class="btn btn-sm btn-subtle" onclick="app.logout()" title="Sign Out of Session">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Layout (Sidebar + Content) -->
+        <div class="app-layout">
+            <!-- Sidebar Navigation (Role Filtered) -->
+            <aside class="sidebar">
+                <nav class="nav-menu" id="sidebar-nav-menu">
+                    <!-- Nav items rendered dynamically by app.renderSidebarNav() -->
+                </nav>
+
+                <div class="sidebar-footer">
+                    <div class="station-badge-card" id="sidebar-station-card">
+                        <div class="station-badge-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                        <div class="station-badge-info">
+                            <h5 id="sidebar-user-station">NCPOR Headquarters</h5>
+                            <p id="sidebar-user-clearance">Full Clearance</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content View Area -->
+            <main class="content-area">
+
+                <!-- TAB 1: MISSION OVERVIEW (ROLE-ADAPTIVE DASHBOARD) -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title" id="dashboard-title"><i class="fa-solid fa-gauge-high"></i> Polar Mission Operations Dashboard</h1>
+                            <p class="page-desc" id="dashboard-subtitle">Real-time status across Indian Antarctic Research Stations, logistics pipelines, and field assets</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-outline" onclick="app.loadDashboard()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+                            <button class="btn btn-outline" id="btn-dashboard-reports" onclick="app.openGenerateReportsModal()"><i class="fa-solid fa-file-export"></i> Export Report</button>
+                            <button class="btn btn-primary" onclick="app.switchTab('map')"><i class="fa-solid fa-map"></i> Open Fleet Map</button>
+                        </div>
+                    </div>
+
+                    <!-- Role Adaptive Banner / Notice -->
+                    <div id="role-context-banner" class="member-portal-card" style="display:none;">
+                        <div class="member-welcome-header">
+                            <div class="member-info-title">
+                                <h3 id="role-banner-title">Welcome to Polar Operations</h3>
+                                <p id="role-banner-desc">Authenticated session active.</p>
+                            </div>
+                            <div id="role-banner-action"></div>
+                        </div>
+                    </div>
+
+                    <!-- KPI Metric Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card blue">
+                            <div class="kpi-icon"><i class="fa-solid fa-ship"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">Active Expeditions</span>
+                                <span class="kpi-val" id="kpi-active-expeditions">0</span>
+                                <span class="kpi-sub" id="kpi-active-exp-name">Loading...</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card green">
+                            <div class="kpi-icon"><i class="fa-solid fa-users"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">Personnel in Antarctica</span>
+                                <span class="kpi-val" id="kpi-personnel-count">0</span>
+                                <span class="kpi-sub" id="kpi-personnel-sub">Maitri & Bharati</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card amber">
+                            <div class="kpi-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">Low Stock / Expiry Alerts</span>
+                                <span class="kpi-val" id="kpi-alerts-count">0</span>
+                                <span class="kpi-sub">Critical thresholds</span>
+                            </div>
+                        </div>
+
+                        <div class="kpi-card rose">
+                            <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                            <div class="kpi-details">
+                                <span class="kpi-label">Active Emergencies</span>
+                                <span class="kpi-val" id="kpi-emergencies-count">0</span>
+                                <span class="kpi-sub" id="kpi-emergencies-sub">All sectors clear</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Split: Map Snapshot & Stations -->
+                    <div class="dashboard-split">
+                        <!-- Geospatial Fleet Overview Panel -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><i class="fa-solid fa-earth-americas"></i> Polar Sector Geospatial Preview</h3>
+                                <button class="btn btn-sm btn-subtle" onclick="app.switchTab('map')">Expand Full Map <i class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                            <div class="panel-body" style="padding: 0; position: relative;">
+                                <div id="miniMapContainer" style="height: 380px; width: 100%; border-radius: 0 0 var(--radius-lg) var(--radius-lg);"></div>
+                            </div>
+                        </div>
+
+                        <!-- Station Status Cards Column -->
+                        <div class="stations-column">
+                            <div class="station-card">
+                                <div class="station-card-header">
+                                    <div class="station-title-group">
+                                        <h4><i class="fa-solid fa-mountain" style="color:#0ea5e9;"></i> MAITRI STATION</h4>
+                                        <span>70°45′57″ S, 11°44′09″ E • Schirmacher Oasis</span>
+                                    </div>
+                                    <span class="badge badge-success">OPERATIONAL</span>
+                                </div>
+                                <div class="station-stats-row">
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num" id="stat-maitri-headcount">0</span>
+                                        <span class="station-stat-lbl">Crew Onsite</span>
+                                    </div>
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num" id="stat-maitri-fuel">4,200 L</span>
+                                        <span class="station-stat-lbl">Diesel Fuel</span>
+                                    </div>
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num" id="stat-maitri-status">Normal</span>
+                                        <span class="station-stat-lbl">Alert State</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="station-card">
+                                <div class="station-card-header">
+                                    <div class="station-title-group">
+                                        <h4><i class="fa-solid fa-snowflake" style="color:#10b981;"></i> BHARATI STATION</h4>
+                                        <span>69°24′28″ S, 76°11′14″ E • Larsemann Hills</span>
+                                    </div>
+                                    <span class="badge badge-success">OPERATIONAL</span>
+                                </div>
+                                <div class="station-stats-row">
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num" id="stat-bharati-headcount">0</span>
+                                        <span class="station-stat-lbl">Crew Onsite</span>
+                                    </div>
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num" id="stat-bharati-fuel">5,100 L</span>
+                                        <span class="station-stat-lbl">Diesel Fuel</span>
+                                    </div>
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num" id="stat-bharati-status">Normal</span>
+                                        <span class="station-stat-lbl">Alert State</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="station-card" style="background:var(--color-polar-50); border-color:var(--color-polar-200);">
+                                <div class="station-card-header">
+                                    <div class="station-title-group">
+                                        <h4><i class="fa-solid fa-ship" style="color:#f59e0b;"></i> MV VASILIY GOLOVNIN</h4>
+                                        <span>Charter Vessel • Southern Ocean Transit</span>
+                                    </div>
+                                    <span class="badge badge-info">IN TRANSIT</span>
+                                </div>
+                                <div class="station-stats-row">
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num">48</span>
+                                        <span class="station-stat-lbl">Containers</span>
+                                    </div>
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num">12.4 kt</span>
+                                        <span class="station-stat-lbl">Speed</span>
+                                    </div>
+                                    <div class="station-stat-item">
+                                        <span class="station-stat-num">-52.3° S</span>
+                                        <span class="station-stat-lbl">Lat Pos</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: GEOSPATIAL & POLAR FLEET MAP (EMBEDDED MAPS) -->
+                <section id="tab-map" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-map-location-dot"></i> Polar Geospatial & Fleet Map</h1>
+                            <p class="page-desc">Integrated Antarctic stereographic map visualization, vessel tracks, and station telemetry</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-outline" onclick="app.refreshMap()"><i class="fa-solid fa-rotate"></i> Refresh Map</button>
+                        </div>
+                    </div>
+
+                    <div class="map-panel">
+                        <!-- Map Toolbar -->
+                        <div class="map-toolbar">
+                            <div class="map-mode-toggle">
+                                <button class="map-mode-btn active" id="btn-mapmode-interactive" onclick="app.setMapMode('interactive')">
+                                    <i class="fa-solid fa-satellite"></i> Interactive Fleet Map
+                                </button>
+                                <button class="map-mode-btn" id="btn-mapmode-bas" onclick="app.setMapMode('bas')">
+                                    <i class="fa-solid fa-globe"></i> BAS Embedded Polar Projection
+                                </button>
+                            </div>
+
+                            <div class="map-focus-buttons">
+                                <span style="font-size:11px; font-weight:600; color:var(--color-navy-500); margin-right:4px;">Quick Focus:</span>
+                                <button class="btn btn-sm btn-outline" onclick="app.focusMapStation('maitri')">Maitri</button>
+                                <button class="btn btn-sm btn-outline" onclick="app.focusMapStation('bharati')">Bharati</button>
+                                <button class="btn btn-sm btn-outline" onclick="app.focusMapStation('capetown')">Cape Town Hub</button>
+                                <button class="btn btn-sm btn-outline" onclick="app.focusMapStation('vessel')">Vessel Route</button>
+                                <button class="btn btn-sm btn-subtle" onclick="app.focusMapStation('antarctica')"><i class="fa-solid fa-compress"></i> Whole Continent</button>
+                            </div>
+                        </div>
+
+                        <!-- Map Frame View Area -->
+                        <div class="map-view-wrapper">
+                            <!-- Interactive Leaflet Map Layer -->
+                            <div id="leafletMap"></div>
+
+                            <!-- BAS Embedded Map iframe Layer (Toggled dynamically) -->
+                            <iframe id="basMapFrame" class="map-frame-view" style="display:none;" title="BAS Polar Embedded Map" allow="fullscreen"></iframe>
+
+                            <!-- Coordinates readout HUD -->
+                            <div class="map-overlay-coords">
+                                <span><i class="fa-solid fa-crosshairs"></i> Cursor: <strong id="map-cursor-coords">-70.7670° S, 11.7330° E</strong></span>
+                                <span>Projection: <strong>Antarctic Stereographic / WGS84</strong></span>
+                            </div>
+                        </div>
+
+                        <!-- Map Legend -->
+                        <div class="map-legend-bar">
+                            <div class="map-legend-item"><span class="legend-dot maitri"></span> <strong>Maitri Station</strong> (-70.767°, 11.733°)</div>
+                            <div class="map-legend-item"><span class="legend-dot bharati"></span> <strong>Bharati Station</strong> (-69.407°, 76.191°)</div>
+                            <div class="map-legend-item"><span class="legend-dot port"></span> <strong>Cape Town Hub</strong> (-33.918°, 18.423°)</div>
+                            <div class="map-legend-item"><span class="legend-dot vessel"></span> <strong>MV Vasiliy Golovnin</strong> (Charter Vessel)</div>
+                            <div class="map-legend-item"><span class="legend-dot ping"></span> <strong>Field GPS Telemetry</strong></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: EXPEDITIONS & VOYAGES -->
+                <section id="tab-expeditions" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-compass"></i> Expeditions & Voyage Management</h1>
+                            <p class="page-desc" id="expeditions-page-desc">Indian Scientific Expeditions to Antarctica (ISEA) schedules, objectives, and transit segments</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-outline" id="btn-export-expeditions" onclick="app.openGenerateReportsModal('EXPEDITION')"><i class="fa-solid fa-file-export"></i> Export Manifest</button>
+                            <div id="header-actions-expeditions" style="display:inline-block;">
+                                <button class="btn btn-primary" onclick="app.openModal('modal-create-expedition')"><i class="fa-solid fa-plus"></i> New Expedition</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-list-check"></i> Registered Expeditions</h3>
+                            <span class="badge badge-neutral" id="expedition-count-badge">0 Expeditions</span>
+                        </div>
+                        <div class="panel-body table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Expedition Name</th>
+                                        <th>Objective</th>
+                                        <th>Start Date</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                        <th>Transit Segments</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="expeditions-table-body">
+                                    <tr>
+                                        <td colspan="7" style="text-align:center; padding:24px; color:var(--color-navy-400);">Loading expeditions...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: SUPPLY CHAIN & CARGO -->
+                <section id="tab-cargo" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-boxes-stacked"></i> Supply Chain & Cargo Manifests</h1>
+                            <p class="page-desc" id="cargo-page-desc">Containerized cargo tracking, hazardous material handling, and customs clearance status</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-outline" id="btn-export-cargo" onclick="app.openGenerateReportsModal('CARGO')"><i class="fa-solid fa-file-export"></i> Export Manifest</button>
+                            <div id="header-actions-cargo" style="display:inline-block;">
+                                <button class="btn btn-primary" onclick="app.openModal('modal-create-cargo')"><i class="fa-solid fa-plus"></i> Register Cargo Item</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-clipboard-list"></i> Cargo Manifest</h3>
+                            <span class="badge badge-neutral" id="cargo-count-badge">0 Items</span>
+                        </div>
+                        <div class="panel-body table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Manifest No</th>
+                                        <th>Description</th>
+                                        <th>Hazard Class</th>
+                                        <th>Weight (kg)</th>
+                                        <th>Destination</th>
+                                        <th>Location / Status</th>
+                                        <th>Customs</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cargo-table-body">
+                                    <tr>
+                                        <td colspan="8" style="text-align:center; padding:24px; color:var(--color-navy-400);">Loading cargo items...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: STATION INVENTORY -->
+                <section id="tab-inventory" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-warehouse"></i> Station Inventory Management</h1>
+                            <p class="page-desc" id="inventory-page-desc">Real-time consumable reserves, fuel stocks, life-support supplies, and reorder alerts</p>
+                        </div>
+                        <div class="header-actions">
+                            <select id="inventory-filter-station" class="form-control" style="width: auto; display: inline-block;" onchange="app.filterInventory()">
+                                <option value="ALL">All Stations</option>
+                                <option value="MAITRI">Maitri Station</option>
+                                <option value="BHARATI">Bharati Station</option>
+                            </select>
+                            <button class="btn btn-outline" id="btn-export-inventory" onclick="app.openGenerateReportsModal('INVENTORY')"><i class="fa-solid fa-file-export"></i> Export Stock</button>
+                            <div id="header-actions-inventory" style="display:inline-block;">
+                                <button class="btn btn-primary" onclick="app.openModal('modal-create-inventory')"><i class="fa-solid fa-plus"></i> Add Inventory Item</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-cubes-stacked"></i> Stock Inventory List</h3>
+                            <span class="badge badge-neutral" id="inventory-count-badge">0 Stock Items</span>
+                        </div>
+                        <div class="panel-body table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>Station</th>
+                                        <th>Category</th>
+                                        <th>Current Qty</th>
+                                        <th>Min Threshold</th>
+                                        <th>Stock Level</th>
+                                        <th>Expiry Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventory-table-body">
+                                    <tr>
+                                        <td colspan="8" style="text-align:center; padding:24px; color:var(--color-navy-400);">Loading inventory...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 6: PERSONNEL ROSTER -->
+                <section id="tab-personnel" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-user-group"></i> Expedition Personnel Roster</h1>
+                            <p class="page-desc" id="personnel-page-desc">Active scientists, logistics crew, medical officers, and station leadership</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-outline" id="btn-export-personnel" onclick="app.openGenerateReportsModal('PERSONNEL')"><i class="fa-solid fa-file-export"></i> Export Roster</button>
+                            <div id="header-actions-personnel" style="display:inline-block;">
+                                <button class="btn btn-primary" onclick="app.openModal('modal-create-person')"><i class="fa-solid fa-user-plus"></i> Register Personnel</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-id-card"></i> Personnel Directory</h3>
+                            <span class="badge badge-neutral" id="personnel-count-badge">0 Crew</span>
+                        </div>
+                        <div class="panel-body table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Full Name</th>
+                                        <th>Role / Designation</th>
+                                        <th>Station / Location</th>
+                                        <th>Expedition</th>
+                                        <th>Blood Group</th>
+                                        <th>Medical Clearance</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="personnel-table-body">
+                                    <tr>
+                                        <td colspan="7" style="text-align:center; padding:24px; color:var(--color-navy-400);">Loading personnel...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 7: EMERGENCY SOS HUB -->
+                <section id="tab-emergency" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-triangle-exclamation" style="color:var(--color-danger);"></i> Emergency & SOS Incident Hub</h1>
+                            <p class="page-desc" id="emergency-page-desc">Real-time incident response, SAR coordination, Blizzard safety protocols, and medical evacuation</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-danger" onclick="app.openModal('modal-create-emergency')"><i class="fa-solid fa-bullhorn"></i> Broadcast Emergency SOS</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-bell"></i> Recorded Emergency Incidents</h3>
+                            <span class="badge badge-neutral" id="emergency-count-badge">0 Incidents</span>
+                        </div>
+                        <div class="panel-body table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Title / Description</th>
+                                        <th>Severity</th>
+                                        <th>Station / Sector</th>
+                                        <th>Reported At</th>
+                                        <th>Current Status</th>
+                                        <th>Response Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="emergencies-table-body">
+                                    <tr>
+                                        <td colspan="6" style="text-align:center; padding:24px; color:var(--color-navy-400);">Loading incidents...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 8: TELEMETRY & GPS PING -->
+                <section id="tab-telemetry" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-satellite-dish"></i> GPS Tracking & Telemetry Hub</h1>
+                            <p class="page-desc">Universal telemetry ingestion for personnel GPS beacons and cargo transponders</p>
+                        </div>
+                    </div>
+
+                    <div class="split-grid-2">
+                        <!-- Telemetry Ingestion Form -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><i class="fa-solid fa-tower-broadcast"></i> Transmit Status Ping</h3>
+                                <span class="badge badge-info">POST /api/v1/status-pings</span>
+                            </div>
+                            <div class="panel-body">
+                                <form id="form-status-ping" onsubmit="app.submitStatusPing(event)">
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Entity Type</label>
+                                            <select id="ping-entity-type" class="form-control" onchange="app.updatePingEntitySelect()">
+                                                <option value="PERSON">PERSON (Personnel Beacon)</option>
+                                                <option value="CARGO_ITEM">CARGO_ITEM (Asset Transponder)</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Target Entity</label>
+                                            <select id="ping-entity-id" class="form-control" required></select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Latitude (°)</label>
+                                            <input type="number" step="0.0001" id="ping-lat" class="form-control" value="-70.7670" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Longitude (°)</label>
+                                            <input type="number" step="0.0001" id="ping-lng" class="form-control" value="11.7330" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>Altitude (m)</label>
+                                            <input type="number" step="1" id="ping-alt" class="form-control" value="117">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <label>Status Note</label>
+                                            <input type="text" id="ping-note" class="form-control" placeholder="e.g. Field science team on regular traverse">
+                                        </div>
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-paper-plane"></i> Dispatch GPS Telemetry Ping</button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Telemetry History Feed -->
+                        <div class="panel">
+                            <div class="panel-header">
+                                <h3 class="panel-title"><i class="fa-solid fa-clock-rotate-left"></i> Latest Telemetry Broadcasts</h3>
+                                <button class="btn btn-sm btn-outline" onclick="app.loadRecentPings()"><i class="fa-solid fa-rotate"></i></button>
+                            </div>
+                            <div class="panel-body table-responsive" style="max-height: 380px; overflow-y:auto;">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Entity</th>
+                                            <th>Coordinates</th>
+                                            <th>Timestamp</th>
+                                            <th>Note</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pings-table-body">
+                                        <tr>
+                                            <td colspan="4" style="text-align:center; padding:16px; color:var(--color-navy-400);">No recent pings.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 9: USER & ROLE MANAGEMENT (Strictly Admin Access) -->
+                <section id="tab-users" class="tab-pane">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title"><i class="fa-solid fa-user-shield" style="color:var(--color-purple);"></i> User Clearance & Role Management</h1>
+                            <p class="page-desc">Centralized access control: Provision users, assign operational roles, and designate station clearances</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-primary" onclick="app.openModal('modal-create-user')"><i class="fa-solid fa-user-plus"></i> Create System User</button>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-users-gear"></i> System User Accounts</h3>
+                            <span class="badge badge-purple" id="user-count-badge">0 Users</span>
+                        </div>
+                        <div class="panel-body table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Username</th>
+                                        <th>Display Name / Designation</th>
+                                        <th>Assigned Role</th>
+                                        <th>Station Clearance</th>
+                                        <th>Access Level</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-table-body">
+                                    <tr>
+                                        <td colspan="6" style="text-align:center; padding:24px; color:var(--color-navy-400);">Loading users...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+         3. MODALS FOR WORKFLOW OPERATIONS
+         ========================================================================== -->
+
+    <!-- Modal: Selectable Incident Status Resolution Dialog -->
+    <div id="modal-resolve-emergency" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-clipboard-check" style="color:var(--color-polar-600);"></i>
+                    <span>Update Emergency Incident Condition</span>
+                </div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-resolve-emergency')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="resolve-em-id">
+                
+                <div style="margin-bottom:14px;">
+                    <span style="font-size:11px; font-weight:700; color:var(--color-navy-500); text-transform:uppercase;">Incident Details</span>
+                    <h4 id="resolve-em-title" style="font-size:14px; font-weight:700; color:var(--color-navy-900); margin-top:2px;">-</h4>
+                    <p id="resolve-em-sector" style="font-size:11px; color:var(--color-navy-500);">-</p>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <label style="font-size:12px; font-weight:700; color:var(--color-navy-700);">Select New Condition / Status:</label>
+                </div>
+
+                <!-- Selectable Status Radio Option Cards -->
+                <div class="status-options-grid">
+                    <div class="status-option-card" onclick="app.selectStatusOption('RESOLVED', this)">
+                        <div class="status-radio-dot"></div>
+                        <div class="status-option-details">
+                            <h5><span class="badge badge-success">RESOLVED</span> All Hazards Cleared</h5>
+                            <p>Threat neutralized, life/safety guaranteed, incident successfully closed.</p>
+                        </div>
+                    </div>
+
+                    <div class="status-option-card" onclick="app.selectStatusOption('MITIGATING', this)">
+                        <div class="status-radio-dot"></div>
+                        <div class="status-option-details">
+                            <h5><span class="badge badge-warning">MITIGATING</span> Response Action Underway</h5>
+                            <p>Engineering or SAR field units deployed and conducting countermeasures.</p>
+                        </div>
+                    </div>
+
+                    <div class="status-option-card" onclick="app.selectStatusOption('INVESTIGATING', this)">
+                        <div class="status-radio-dot"></div>
+                        <div class="status-option-details">
+                            <h5><span class="badge badge-info">INVESTIGATING</span> Severity Assessment</h5>
+                            <p>Evaluating telemetry and telemetry beacon coordinates in field.</p>
+                        </div>
+                    </div>
+
+                    <div class="status-option-card" onclick="app.selectStatusOption('ESCALATED', this)">
+                        <div class="status-radio-dot"></div>
+                        <div class="status-option-details">
+                            <h5><span class="badge badge-danger">ESCALATED</span> Ministry / HQ Escalation</h5>
+                            <p>Critical severity requiring National HQ decision and naval/air support.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                    <label for="resolve-em-notes">Resolution Action / Log Notes</label>
+                    <textarea id="resolve-em-notes" class="form-control" rows="3" placeholder="Describe corrective measures taken, equipment replaced, or personnel recovered..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="resolve-em-team">Assigned Response Team</label>
+                    <input type="text" id="resolve-em-team" class="form-control" placeholder="Maitri SAR Team Alpha">
+                </div>
+
+                <button type="button" class="btn btn-primary" style="width:100%; margin-top:8px;" onclick="app.confirmEmergencyStatusUpdate()">
+                    <i class="fa-solid fa-check-double"></i> Confirm & Apply Status Update
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Emergency Response Log Entry (Coordinator & Commander) -->
+    <div id="modal-add-response-log" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-file-pen" style="color:var(--color-primary);"></i> Add Emergency Response Log Entry</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-add-response-log')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-emergency-log" onsubmit="app.submitEmergencyResponseLog(event)">
+                    <input type="hidden" id="log-em-id">
+                    <div class="form-group">
+                        <label>Incident</label>
+                        <input type="text" id="log-em-title" class="form-control" disabled style="background:var(--color-surface-subtle); font-weight:700;">
+                    </div>
+                    <div class="form-group">
+                        <label>Action Taken / Log Entry</label>
+                        <textarea id="log-action-text" class="form-control" rows="3" placeholder="e.g. Dispatched resupply container verification to Cape Town Port team..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Responding Officer / Operator</label>
+                        <input type="text" id="log-responder-name" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-plus"></i> Submit Log Entry</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Update Cargo Status (Lifecycle Management with Role Permissions) -->
+    <div id="modal-update-cargo-status" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-dolly" style="color:var(--color-primary);"></i> Update Cargo Lifecycle Status</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-update-cargo-status')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-update-cargo-status" onsubmit="app.submitUpdateCargoStatus(event)">
+                    <input type="hidden" id="update-cargo-id">
+                    <div class="form-group">
+                        <label>Cargo Item</label>
+                        <input type="text" id="update-cargo-desc" class="form-control" disabled style="background:var(--color-surface-subtle); font-weight:700;">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Lifecycle Status</label>
+                        <select id="update-cargo-status-select" class="form-control" required></select>
+                        <small id="update-cargo-role-note" style="color:var(--color-navy-500); font-size:11px; margin-top:4px; display:block;"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Station Location / Transit Leg</label>
+                        <input type="text" id="update-cargo-location" class="form-control" placeholder="e.g. Maitri Main Fuel Storage Vault">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-check"></i> Apply Cargo Status Update</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Update Personnel Movement Status / Self Check-In -->
+    <div id="modal-update-personnel-status" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-person-walking-luggage" style="color:var(--color-primary);"></i> Update Personnel Movement & Location</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-update-personnel-status')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-update-person-status" onsubmit="app.submitUpdatePersonStatus(event)">
+                    <input type="hidden" id="update-person-id">
+                    <div class="form-group">
+                        <label>Crew Member</label>
+                        <input type="text" id="update-person-name" class="form-control" disabled style="background:var(--color-surface-subtle); font-weight:700;">
+                    </div>
+                    <div class="form-group">
+                        <label>Movement Status</label>
+                        <select id="update-person-status-select" class="form-control" required>
+                            <option value="IN_INDIA">IN_INDIA (NCPOR Goa HQ / Pre-departure)</option>
+                            <option value="IN_TRANSIT">IN_TRANSIT (Cape Town / Southern Ocean)</option>
+                            <option value="AT_STATION">AT_STATION (Onsite Maitri / Bharati)</option>
+                            <option value="ON_EXPEDITION">ON_EXPEDITION (Field Traverse / Scientific Camp)</option>
+                            <option value="MEDICAL_EVACUATION">MEDICAL_EVACUATION (Medevac Protocol)</option>
+                            <option value="RETURNED">RETURNED (Mission Completed)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Location Details / Check-in Note</label>
+                        <input type="text" id="update-person-location" class="form-control" placeholder="e.g. Maitri Station Living Module 2" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-location-crosshairs"></i> Save Movement Check-In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Update Fitness Clearance (HQ Admin & Station Commander only) -->
+    <div id="modal-update-fitness-clearance" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-heart-pulse" style="color:var(--color-success);"></i> Medical & Fitness Clearance Status</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-update-fitness-clearance')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-update-fitness" onsubmit="app.submitUpdateFitnessStatus(event)">
+                    <input type="hidden" id="fitness-person-id">
+                    <div class="form-group">
+                        <label>Crew Member</label>
+                        <input type="text" id="fitness-person-name" class="form-control" disabled style="background:var(--color-surface-subtle); font-weight:700;">
+                    </div>
+                    <div class="form-group">
+                        <label>Fitness Clearance Classification</label>
+                        <select id="fitness-status-select" class="form-control" required>
+                            <option value="FIT_FOR_WINTER">FIT_FOR_WINTER (Full Antarctic Winter Over Clearance)</option>
+                            <option value="FIT_FOR_SUMMER">FIT_FOR_SUMMER (Summer Campaign Only)</option>
+                            <option value="CONDITIONAL_FIT">CONDITIONAL_FIT (Restricted Duties)</option>
+                            <option value="PENDING_REVIEW">PENDING_REVIEW (Awaiting Lab / ECG Results)</option>
+                            <option value="UNFIT">UNFIT (Medically Disqualified)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Medical Officer / Commander Sign-off Note</label>
+                        <textarea id="fitness-notes" class="form-control" rows="2" placeholder="e.g. Full polar medical board clearance certified for 46-ISEA winter team." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-signature"></i> Certify Fitness Clearance</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Generate & Export Reports (Role Scoped) -->
+    <div id="modal-generate-reports" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 580px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-file-invoice" style="color:var(--color-primary);"></i> Export Operational Reports & Audits</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-generate-reports')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-generate-reports" onsubmit="app.submitGenerateReport(event)">
+                    <div class="form-group">
+                        <label>Report Type</label>
+                        <select id="report-type-select" class="form-control" onchange="app.updateReportScopeOptions()" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Report Scope / Sector</label>
+                        <select id="report-scope-select" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Export Format</label>
+                        <select id="report-format-select" class="form-control">
+                            <option value="PDF">PDF Document (Formatted Official NCPOR Report with Verification Hash)</option>
+                            <option value="CSV">CSV Spreadsheet Data (.csv)</option>
+                            <option value="JSON">JSON Structured Manifest (.json)</option>
+                        </select>
+                    </div>
+                    <div id="report-preview-box" style="display:none; background:var(--color-polar-50); border:1px solid var(--color-polar-200); border-radius:var(--radius-md); padding:12px; margin-bottom:14px; font-size:12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-weight:700; color:var(--color-navy-800); display:flex; align-items:center; gap:6px;">
+                                <i class="fa-solid fa-circle-check" style="color:var(--color-success);"></i> Report Generated Successfully
+                            </span>
+                            <span id="report-preview-badge" class="badge badge-info" style="font-size:11px;">0 Records</span>
+                        </div>
+                        <div id="report-preview-content" style="font-family:var(--font-mono); color:var(--color-navy-700); max-height:140px; overflow-y:auto; font-size:11px; white-space:pre-wrap; background:#ffffff; padding:10px; border-radius:6px; border:1px solid var(--color-polar-200); line-height:1.45;"></div>
+                        <div id="report-preview-actions" style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
+                            <button type="button" class="btn btn-outline btn-sm" id="btn-re-download" style="font-size:11px; padding:5px 12px;" onclick="app.reDownloadLastReport()"><i class="fa-solid fa-download"></i> Download Again</button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-print-report" style="font-size:11px; padding:5px 12px;" onclick="app.printLastReport()"><i class="fa-solid fa-print"></i> Print / Save PDF</button>
+                        </div>
+                    </div>
+                    <button type="submit" id="btn-submit-report" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-download"></i> Generate & Download Report</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Expedition Detail, Capacity Optimizer & Readiness Checklist -->
+    <div id="modal-expedition-detail" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 860px; width: 95%;">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-title" id="exp-detail-modal-title"><i class="fa-solid fa-compass" style="color:var(--color-primary);"></i> Expedition Operations & Readiness</div>
+                    <div style="font-size:12px; color:var(--color-navy-500); margin-top:2px;" id="exp-detail-modal-sub">National Polar Logistics Hub</div>
+                </div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-expedition-detail')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 16px 20px;">
+                <!-- Sub tabs navigation -->
+                <div style="display:flex; gap:8px; border-bottom:1px solid var(--color-polar-200); padding-bottom:10px; margin-bottom:16px;">
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-subtab-capacity" onclick="app.switchExpeditionSubTab('capacity')">
+                        <i class="fa-solid fa-scale-balanced"></i> Cargo Capacity Optimizer
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" id="btn-subtab-readiness" onclick="app.switchExpeditionSubTab('readiness')">
+                        <i class="fa-solid fa-clipboard-check"></i> Pre-Departure Readiness Checklist
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline" id="btn-subtab-route" onclick="app.switchExpeditionSubTab('route')">
+                        <i class="fa-solid fa-route"></i> Transit Segments
+                    </button>
+                </div>
+
+                <!-- Subtab 1: Capacity Optimizer Content -->
+                <div id="subtab-content-capacity">
+                    <div id="exp-capacity-summary-card" style="background:var(--color-polar-50); border:1px solid var(--color-polar-200); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
+                        <!-- Rendered by app.js -->
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="font-size:13px; font-weight:700; color:var(--color-navy-800); margin:0;">
+                            <i class="fa-solid fa-bars-progress" style="color:var(--color-primary);"></i> Transit Leg Capacity Breakdown
+                        </h4>
+                        <span style="font-size:11px; font-weight:400; color:var(--color-navy-500);">Color Bands: <span style="color:#16a34a; font-weight:700;">Green &lt;80%</span> | <span style="color:#d97706; font-weight:700;">Amber 80-100%</span> | <span style="color:#dc2626; font-weight:700;">Red &gt;100%</span></span>
+                    </div>
+                    <div id="exp-legs-capacity-container" style="display:flex; flex-direction:column; gap:12px;">
+                        <!-- Rendered by app.js -->
+                    </div>
+                </div>
+
+                <!-- Subtab 2: Readiness Checklist Content -->
+                <div id="subtab-content-readiness" style="display:none;">
+                    <div id="exp-readiness-warning-banner" style="display:none; background:#fef3c7; border:1px solid #fde68a; border-radius:var(--radius-md); padding:12px 14px; margin-bottom:14px; font-size:12px; color:#92400e; align-items:center; gap:10px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size:18px; color:#d97706;"></i>
+                        <div>
+                            <strong>Pre-Departure Alert:</strong> <span id="exp-readiness-warning-text">Departure date within 7 days. Mandatory requirements remain unverified!</span>
+                        </div>
+                    </div>
+                    <div id="exp-readiness-summary-card" style="background:var(--color-polar-50); border:1px solid var(--color-polar-200); border-radius:var(--radius-md); padding:14px; margin-bottom:16px;">
+                        <!-- Rendered by app.js -->
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h4 style="font-size:13px; font-weight:700; color:var(--color-navy-800); margin:0;">
+                            <i class="fa-solid fa-users-viewfinder" style="color:var(--color-primary);"></i> Crew Pre-Departure Clearance Matrix
+                        </h4>
+                        <span style="font-size:11px; color:var(--color-navy-500);"><i class="fa-solid fa-circle-info"></i> Click icons to toggle verification status</span>
+                    </div>
+                    <div class="table-responsive" style="max-height:300px; overflow-y:auto; border:1px solid var(--color-polar-200); border-radius:var(--radius-md);">
+                        <table class="data-table" style="font-size:12px; margin:0;">
+                            <thead>
+                                <tr>
+                                    <th>Crew Member</th>
+                                    <th>Role / Station</th>
+                                    <th style="text-align:center;">Medical Board</th>
+                                    <th style="text-align:center;">Passport / Visa</th>
+                                    <th style="text-align:center;">Survival Course</th>
+                                    <th style="text-align:center;">Polar Kit</th>
+                                    <th style="text-align:center;">Next-of-Kin</th>
+                                    <th style="text-align:center;">Readiness</th>
+                                </tr>
+                            </thead>
+                            <tbody id="exp-readiness-matrix-body">
+                                <!-- Rendered by app.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Subtab 3: Route Segments Stepper Content -->
+                <div id="subtab-content-route" style="display:none;">
+                    <div id="exp-route-stepper-container" style="display:flex; flex-direction:column; gap:10px;">
+                        <!-- Rendered by app.js -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Capacity Over-Commitment Advisory & Override Confirmation -->
+    <div id="modal-capacity-override-warning" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 500px;">
+            <div class="modal-header" style="background:#fee2e2; border-bottom:1px solid #fecaca;">
+                <div class="modal-title" style="color:#991b1b;"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626;"></i> Capacity Over-Commitment Advisory</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-capacity-override-warning')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size:13px; color:var(--color-navy-800); margin-bottom:14px; line-height:1.5;" id="capacity-warning-msg">
+                    Adding this cargo item will cause the transit leg capacity to exceed 100%.
+                </div>
+                <div style="background:var(--color-polar-50); border:1px solid var(--color-polar-200); border-radius:var(--radius-md); padding:12px; margin-bottom:14px; font-size:12px;">
+                    <div style="font-weight:700; color:var(--color-navy-800); margin-bottom:4px;">Operational Guidance:</div>
+                    <p style="color:var(--color-navy-600); margin:0;">
+                        As Logistics Coordinator or HQ Admin, you may authorize an emergency override for critical polar provisions. This confirmation will be permanently recorded in the system audit trail.
+                    </p>
+                </div>
+                <div style="display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn btn-outline" onclick="app.closeModal('modal-capacity-override-warning')">Cancel & Adjust Cargo</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirm-capacity-override" onclick="app.confirmCapacityOverride()"><i class="fa-solid fa-check"></i> Authorize & Proceed</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Leg Capacity -->
+    <div id="modal-edit-leg-capacity" class="modal-backdrop">
+        <div class="modal-dialog" style="max-width: 440px;">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-weight-hanging" style="color:var(--color-primary);"></i> Edit Transit Leg Capacity</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-edit-leg-capacity')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-leg-capacity" onsubmit="app.submitEditLegCapacity(event)">
+                    <input type="hidden" id="edit-leg-id">
+                    <div class="form-group">
+                        <label>Transit Leg Route</label>
+                        <input type="text" id="edit-leg-route-display" class="form-control" disabled style="background:var(--color-polar-50); font-weight:700;">
+                    </div>
+                    <div class="form-group">
+                        <label>Max Weight Capacity (kg) <span style="color:var(--color-danger);">*</span></label>
+                        <input type="number" id="edit-leg-max-weight" class="form-control" min="100" step="100" required>
+                        <small style="color:var(--color-navy-500); font-size:11px;">e.g. 20000 kg (20 Metric Tons)</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Volume Capacity (m³) (Optional)</label>
+                        <input type="number" id="edit-leg-max-volume" class="form-control" min="1" step="0.5">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-floppy-disk"></i> Update Leg Capacity</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Admin Edit User Role & Station -->
+    <div id="modal-edit-user-role" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-user-gear"></i> Assign User Role & Clearance</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-edit-user-role')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-edit-user-role" onsubmit="app.submitEditUserRole(event)">
+                    <input type="hidden" id="edit-user-username">
+                    <div class="form-group">
+                        <label>Target Username</label>
+                        <input type="text" id="edit-user-display" class="form-control" disabled style="background:var(--color-surface-subtle); font-weight:700;">
+                    </div>
+                    <div class="form-group">
+                        <label>Assign Operational Role</label>
+                        <select id="edit-user-role-select" class="form-control" required>
+                            <option value="ROLE_HQ_ADMIN">ROLE_HQ_ADMIN (National Command & User Admin)</option>
+                            <option value="ROLE_LOGISTICS_COORDINATOR">ROLE_LOGISTICS_COORDINATOR (Cape Town Supply Chain)</option>
+                            <option value="ROLE_STATION_COMMANDER">ROLE_STATION_COMMANDER (Station Commander)</option>
+                            <option value="ROLE_EXPEDITION_MEMBER">ROLE_EXPEDITION_MEMBER (Field Scientist / Crew)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Station Clearance</label>
+                        <select id="edit-user-station-select" class="form-control">
+                            <option value="">NONE / ALL (HQ Level)</option>
+                            <option value="MAITRI">MAITRI STATION (Schirmacher Oasis)</option>
+                            <option value="BHARATI">BHARATI STATION (Larsemann Hills)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-floppy-disk"></i> Save Role & Clearance</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create System User (Admin) -->
+    <div id="modal-create-user" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-user-plus"></i> Create System User</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-create-user')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-user" onsubmit="app.submitCreateUser(event)">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="new-user-name" class="form-control" placeholder="e.g. glaciology_lead" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Display Name</label>
+                        <input type="text" id="new-user-display-name" class="form-control" placeholder="e.g. Dr. Vivek Sen" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="new-user-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select id="new-user-role" class="form-control" required>
+                                <option value="ROLE_EXPEDITION_MEMBER">ROLE_EXPEDITION_MEMBER</option>
+                                <option value="ROLE_STATION_COMMANDER">ROLE_STATION_COMMANDER</option>
+                                <option value="ROLE_LOGISTICS_COORDINATOR">ROLE_LOGISTICS_COORDINATOR</option>
+                                <option value="ROLE_HQ_ADMIN">ROLE_HQ_ADMIN</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Station Clearance</label>
+                            <select id="new-user-station" class="form-control">
+                                <option value="">NONE / HQ</option>
+                                <option value="MAITRI">MAITRI</option>
+                                <option value="BHARATI">BHARATI</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-plus"></i> Provision User Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Expedition -->
+    <div id="modal-create-expedition" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-compass"></i> Create New Expedition</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-create-expedition')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-expedition" onsubmit="app.submitCreateExpedition(event)">
+                    <div class="form-group">
+                        <label>Expedition Name</label>
+                        <input type="text" id="exp-name" class="form-control" placeholder="e.g. 47-ISEA Maitri/Bharati Expedition" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Scientific Objective</label>
+                        <textarea id="exp-objective" class="form-control" rows="3" placeholder="Primary research & wintering mission objectives..." required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="date" id="exp-start" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="date" id="exp-end" class="form-control" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-plus"></i> Initialize Expedition</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Cargo Item -->
+    <div id="modal-create-cargo" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-box"></i> Register Cargo Item</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-create-cargo')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-cargo" onsubmit="app.submitCreateCargo(event)">
+                    <div class="form-group">
+                        <label>Manifest Number</label>
+                        <input type="text" id="cargo-manifest-no" class="form-control" placeholder="e.g. 46-CARGO-005" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="cargo-desc" class="form-control" placeholder="e.g. Scientific Seismograph Sensors & Batteries" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Hazard Class</label>
+                            <select id="cargo-hazard" class="form-control">
+                                <option value="NONE">NONE (Standard Cargo)</option>
+                                <option value="FLAMMABLE">FLAMMABLE (Fuel / Chemicals)</option>
+                                <option value="BATTERY">BATTERY (Lithium Storage)</option>
+                                <option value="RADIOACTIVE">RADIOACTIVE (Lab Isotopes)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" step="0.1" id="cargo-weight" class="form-control" value="250.0" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Destination</label>
+                            <select id="cargo-dest" class="form-control">
+                                <option value="MAITRI">Maitri Station</option>
+                                <option value="BHARATI">Bharati Station</option>
+                                <option value="CAPE_TOWN">Cape Town Port</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Current Location</label>
+                            <input type="text" id="cargo-loc" class="form-control" value="Cape Town Port Staging" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-plus"></i> Save Cargo Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Inventory Item -->
+    <div id="modal-create-inventory" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-cubes"></i> Add Inventory Item</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-create-inventory')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-inventory" onsubmit="app.submitCreateInventory(event)">
+                    <div class="form-group">
+                        <label>Item Name</label>
+                        <input type="text" id="inv-name" class="form-control" placeholder="e.g. Arctic Grade Diesel (ATF-50)" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Station</label>
+                            <select id="inv-station" class="form-control">
+                                <option value="MAITRI">Maitri</option>
+                                <option value="BHARATI">Bharati</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="inv-category" class="form-control">
+                                <option value="FUEL">FUEL</option>
+                                <option value="FOOD">FOOD</option>
+                                <option value="MEDICAL">MEDICAL</option>
+                                <option value="EQUIPMENT">EQUIPMENT</option>
+                                <option value="LIFE_SUPPORT">LIFE_SUPPORT</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Quantity</label>
+                            <input type="number" step="0.1" id="inv-qty" class="form-control" value="5000" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <input type="text" id="inv-unit" class="form-control" value="Liters" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Min Threshold</label>
+                            <input type="number" step="0.1" id="inv-min" class="form-control" value="1000" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date (Optional)</label>
+                        <input type="date" id="inv-expiry" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-plus"></i> Save Inventory Item</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Adjust Stock Quantity -->
+    <div id="modal-adjust-inventory" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-boxes-packing"></i> Adjust Inventory Stock</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-adjust-inventory')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-adjust-inventory" onsubmit="app.submitAdjustInventory(event)">
+                    <input type="hidden" id="adjust-inv-id">
+                    <div class="form-group">
+                        <label>Item Name & Station</label>
+                        <input type="text" id="adjust-inv-display" class="form-control" disabled style="background:var(--color-surface-subtle); font-weight:700;">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Current Stock Quantity (<span id="adjust-inv-unit">Units</span>)</label>
+                            <input type="number" step="0.1" id="adjust-inv-qty" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Min Safe Threshold</label>
+                            <input type="number" step="0.1" id="adjust-inv-min" class="form-control" required>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-bottom:16px;">
+                        <button type="button" class="btn btn-sm btn-subtle" onclick="app.quickAdjustStock(-100)">-100</button>
+                        <button type="button" class="btn btn-sm btn-subtle" onclick="app.quickAdjustStock(-10)">-10</button>
+                        <button type="button" class="btn btn-sm btn-subtle" onclick="app.quickAdjustStock(10)">+10</button>
+                        <button type="button" class="btn btn-sm btn-subtle" onclick="app.quickAdjustStock(100)">+100</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-floppy-disk"></i> Update Stock Level</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Personnel -->
+    <div id="modal-create-person" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-user-plus"></i> Register Personnel</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-create-person')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-person" onsubmit="app.submitCreatePerson(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="person-name" class="form-control" placeholder="Dr. Rajesh Sharma" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Role / Specialization</label>
+                            <input type="text" id="person-role" class="form-control" placeholder="Senior Glaciologist" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Station Assignment</label>
+                            <select id="person-station" class="form-control">
+                                <option value="MAITRI">Maitri Station</option>
+                                <option value="BHARATI">Bharati Station</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Blood Group</label>
+                            <select id="person-blood" class="form-control">
+                                <option value="O_POS">O+</option>
+                                <option value="O_NEG">O-</option>
+                                <option value="A_POS">A+</option>
+                                <option value="A_NEG">A-</option>
+                                <option value="B_POS">B+</option>
+                                <option value="B_NEG">B-</option>
+                                <option value="AB_POS">AB+</option>
+                                <option value="AB_NEG">AB-</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Medical Clearance Status</label>
+                            <select id="person-medical" class="form-control">
+                                <option value="FIT_FOR_WINTER">FIT FOR WINTER (Full Antarctic Clearance)</option>
+                                <option value="FIT_FOR_SUMMER">FIT FOR SUMMER</option>
+                                <option value="PENDING_REVIEW">PENDING REVIEW</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Emergency Contact</label>
+                        <input type="text" id="person-emergency" class="form-control" placeholder="+91 9876543210 (Next of kin)" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width:100%;"><i class="fa-solid fa-plus"></i> Register Member</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Broadcast Emergency SOS -->
+    <div id="modal-create-emergency" class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header" style="border-bottom-color:var(--color-danger-border);">
+                <div class="modal-title" style="color:var(--color-danger);"><i class="fa-solid fa-triangle-exclamation"></i> Broadcast Emergency SOS</div>
+                <button class="modal-close-btn" onclick="app.closeModal('modal-create-emergency')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-emergency" onsubmit="app.submitCreateEmergency(event)">
+                    <div class="form-group">
+                        <label>Incident Description / Title</label>
+                        <input type="text" id="em-desc" class="form-control" placeholder="e.g. Field Piston-Bully Vehicle Engine Seizure in Sector 4" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Severity Level</label>
+                            <select id="em-severity" class="form-control">
+                                <option value="CRITICAL">CRITICAL (Immediate Life / Safety Threat)</option>
+                                <option value="HIGH">HIGH (Equipment / Power Failure)</option>
+                                <option value="MEDIUM">MEDIUM (Weather Delays / Non-Critical)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Station / Sector</label>
+                            <select id="em-station" class="form-control">
+                                <option value="MAITRI">Maitri Station</option>
+                                <option value="BHARATI">Bharati Station</option>
+                                <option value="SOUTHERN_OCEAN">Southern Ocean Transit</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Assigned Response Team</label>
+                        <input type="text" id="em-assigned" class="form-control" placeholder="Maitri SAR Team Alpha" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger" style="width:100%;"><i class="fa-solid fa-triangle-exclamation"></i> Broadcast Emergency SOS</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- External Leaflet JS and App JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
