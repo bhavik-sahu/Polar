@@ -1,0 +1,202 @@
+# BAS Embedded Maps Service - Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.4.1] 2026-05-28
+
+### Changed
+
+* Tweaked styles — borders and shadows
+
+
+## [0.4.0] 2026-05-28
+
+### Changed
+
+* CI build jobs use Node 24 (`node:24-alpine`); e2e CI and `e2e/config/Dockerfile.e2e` use Playwright `v1.59.1-noble` so the pipeline matches Node 24 and current `@playwright/test`.
+  [#59](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/59)
+* GitLab install steps and local e2e Docker Compose use `npm ci` for installs from the committed lockfile.
+  [#59](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/59)
+* `package.json` `engines` require Node 24 and npm 11+; `@types/node` aligned with Node 24.
+  [#59](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/59)
+* Upgraded the core dependencies (mapping SDK, UI framework, styling, validation) and the build, test, and lint toolchain to their current major versions, adapting application code to the new APIs and conventions
+* Refactored tailwind variants usage to follow best practices and utilise slots in more cases.
+* Modernised the React hooks lint setup to the native flat config and reworked the affected hooks to satisfy the stricter effect and state rules
+
+### Added
+
+* Committed `.npmrc` with `engine-strict=true`, `min-release-age=5` (release-age policy), and `allow-git=none`.
+  [#59](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/59)
+* README **Developing** section: required Node/npm, what `.npmrc` applies, and when to use `npm install` vs a clean `npm ci`.
+  [#59](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/59)
+* Custom map attribution control, replacing reliance on the default Esri attribution widget which cannot be easily customised.
+* Unit test npm scripts
+
+### Fixed
+
+* Globe component sizing and responsive behaviour
+
+### Removed
+
+* Deprecated ArcGIS widget and layer wrappers, replaced by a shared `createWidget` utility, along with now-unused typings and Esri override stylesheets
+
+## [0.3.0] 2025-11-04
+
+### Added
+
+* Support for multiple asset IDs and types as array query parameters
+  [#56](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/56)
+* Support for layers parameter to load feature layers from portal item IDs
+  [#55](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/55)
+* Bounding box layer to handle display of bounding boxes at different scales
+  [#46](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/45)
+* Support for multiple bounding boxes passed in the url params
+  [#47](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/47)
+* Support for graticule layer overlay
+  [#52](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/52)
+* Support for points to be passed in the url params
+  [#49](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/49)
+* Support for asset type to be passed in the url params
+  [#53](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/53)
+* Support for switching between BAS Style Kit versions via themes url param
+  [#51](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/51)
+* Experimental Embedded Maps configurator
+  [#51](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/51)
+
+### Fixed
+
+* Bug where bounding box was not being displayed correctly on the globe near the poles.
+  [#54](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/54)
+* Inappropriate version prefix in testing environment
+  [#57](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/57)
+* Stale arcgis versions causing crashes and incorrect rotations in poles
+  [#51](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/51)
+* Broken e2e test snapshot
+  [#51](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/51)
+
+### Changed
+
+* Switched from PandaCSS to Tailwind for consistency with other projects
+  [#51](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/51)
+* Updating to ArcGIS JS SDK 4.33
+  [#51](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/51)
+* CI configuration refactored to use separate build stages for each environment
+  [#51](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/51)
+
+## [0.2.1] 2025-04-01
+
+### Added
+
+* Clarifying bounding box handling across the antimeridian
+  [#44](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/44)
+
+### Fixed
+
+* README typos
+  [#44](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/44)
+* Improved display of arctic projection when show regional/basemap extent enabled
+  [#42](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/42)
+* Asset popup not showing selected feature
+  [#41](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/41)
+
+
+## [0.2.0] 2025-03-29
+
+### Added
+
+* Scale bar control 
+  [#10](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/10)
+* Theme support based on user OS preferences 
+  [#14](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/14)
+* Fullscreen map control 
+  [#11](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/11)
+* Parameter for showing asset popup 
+  [#25](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/25)
+* Added end-to-end tests for map 
+  [#12](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/12)
+
+### Changed
+
+* Refactored query parameters to use kebab-case
+* Enabled resampling on basemap layers to prevent disappearing from view 
+  [#17](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/17)
+* Using profiles for passing AWS credentials in Terraform
+  [#29](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/29)
+* Switching to production assets layer
+  [#20](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/20)
+* Hiding non-selected assets when filtering rather than showing as faded
+  [#30](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/30)
+* Reimplementing health check within React app
+  [#7](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/7)
+* Updating dependencies
+  [#32](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/32)
+* Updating documentation
+  [#26](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/26)
+* Refactoring URL parameters
+  [#34](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/34)
+
+### Fixed
+
+* Globe overview now matches basemap rotation for polar coordinate systems 
+  [#15](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/15)
+* Support for bounding box marker on globe overview 
+  [#16](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/16)
+* S3 CORS configuration
+  [#28](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/28)
+* Bounds for using Arctic basemap/projection
+  [#33](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/33)
+
+### Removed
+* Outdated testing documentation
+
+## [0.1.3] 2025-02-11
+
+### Added
+
+* Query parameters for `center`, `zoom`, `scale`, `bbox`, `globe_overview`, `asset_id`, `hide_ui`, `show_region`
+* Playwright end to end tests
+* Unit tests for bbox logic
+* Basemap config
+
+### Fixed
+
+* Asset icon headings in polar projections
+
+### Changed
+
+* Refactored embeded map component to use arcgis and react
+
+## [0.1.2] 2025-01-16
+
+### Added
+
+* Test pages for hosted environments
+  [#6](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/6)
+* Continuous Deployment environments
+  [#5](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/5)
+* Automated GitLab releases via Continuous Deployment
+  [#4](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/4)
+
+### Changed
+
+* Updating project name to 'Embedded Maps Service' (rather than 'Embedded Maps')
+
+## [0.1.1] 2024-11-06
+
+### Fixed
+
+* Hiding CSS overflows
+
+## [0.1.0] 2024-11-06
+
+### Added
+
+* Minimal app implementation using static images for Well Known Extents only
+  [#2](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/2)
+* Initial project setup
+  [#1](https://gitlab.data.bas.ac.uk/MAGIC/embedded-maps/-/issues/1)

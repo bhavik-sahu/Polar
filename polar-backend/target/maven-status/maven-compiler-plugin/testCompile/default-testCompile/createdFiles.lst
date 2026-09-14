@@ -1,0 +1,4 @@
+com\polar\logistics\tracking\StatusTrackingServiceTest.class
+com\polar\logistics\service\InventoryManagementServiceTest.class
+com\polar\logistics\service\CargoTrackingServiceTest.class
+com\polar\logistics\service\ExpeditionPlanningServiceTest.class

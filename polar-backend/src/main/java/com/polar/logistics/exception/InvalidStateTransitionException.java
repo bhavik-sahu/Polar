@@ -1,0 +1,7 @@
+package com.polar.logistics.exception;
+
+public class InvalidStateTransitionException extends RuntimeException {
+    public InvalidStateTransitionException(String message) {
+        super(message);
+    }
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Integrated Polar Expedition Logistics System — NCPOR</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">❄</div>
+        <div>
+          <div class="brand-title">Polar Logistics</div>
+          <div class="brand-sub">NCPOR · SIH26062</div>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+        <button class="nav-btn" data-view="expeditions">Expedition Planning</button>
+        <button class="nav-btn" data-view="cargo">Cargo &amp; Asset Tracking</button>
+        <button class="nav-btn" data-view="inventory">Inventory Management</button>
+        <button class="nav-btn" data-view="personnel">Personnel Movement</button>
+        <button class="nav-btn" data-view="emergencies">Emergency Response</button>
+        <button class="nav-btn" data-view="sources">Data Sources</button>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="conn-status" class="conn-status">● checking API…</span>
+      </div>
+    </aside>
+
+    <div class="status-strip" id="status-strip">
+      <span class="station-pill"><span class="dot" id="dot-maitri"></span>MAITRI — SCHIRMACHER OASIS</span>
+      <span class="sep">/</span>
+      <span class="station-pill"><span class="dot" id="dot-bharati"></span>BHARATI — LARSEMANN HILLS</span>
+      <span class="clock" id="strip-clock"></span>
+    </div>
+
+    <main class="content">
+      <div id="view-root"></div>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="views/dashboard.js"></script>
+  <script src="views/expeditions.js"></script>
+  <script src="views/cargo.js"></script>
+  <script src="views/inventory.js"></script>
+  <script src="views/personnel.js"></script>
+  <script src="views/emergencies.js"></script>
+  <script src="views/sources.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

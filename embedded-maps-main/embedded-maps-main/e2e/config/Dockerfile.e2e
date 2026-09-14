@@ -1,0 +1,9 @@
+FROM mcr.microsoft.com/playwright:v1.59.1-noble
+
+WORKDIR /app
+
+# Install Playwright browsers during build time
+RUN npx playwright install --with-deps
+
+# We'll handle the rest of the setup in docker-compose command
+# to keep the development workflow flexible 

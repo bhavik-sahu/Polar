@@ -1,0 +1,36 @@
+import type MapView from '@arcgis/core/views/MapView';
+import type SceneView from '@arcgis/core/views/SceneView';
+
+import { ArcViewContext } from '@/lib/arcgis/contexts/ArcViewContext/ArcViewContext';
+import { ArcInternalViewProvider } from '@/lib/arcgis/contexts/InternalViewContext/ArcInternalViewProvider';
+
+export const withInternalViewProvider = ({ mapView }: { mapView: MapView | SceneView }) => {
+  const withMapProviderWrapper = ({ children }: { children: React.ReactNode }) => {
+    return <ArcInternalViewProvider view={mapView}>{children}</ArcInternalViewProvider>;
+  };
+
+  return withMapProviderWrapper;
+};
+
+export const withMountedViewsProvider = ({
+  mapview,
+  id,
+}: {
+  mapview: MapView | SceneView;
+  id: string;
+}) => {
+  const withMountedViewsProviderWrapper = ({ children }: { children: React.ReactNode }) => {
+    return (
+      <ArcViewContext.Provider
+        value={{
+          views: { [id]: mapview },
+          onViewMount: () => {},
+          onViewUnmount: () => {},
+        }}
+      >
+        {children}
+      </ArcViewContext.Provider>
+    );
+  };
+  return withMountedViewsProviderWrapper;
+};

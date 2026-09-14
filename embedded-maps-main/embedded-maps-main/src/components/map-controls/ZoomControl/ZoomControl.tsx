@@ -1,0 +1,52 @@
+import { tv } from 'tailwind-variants';
+
+import { IconButton } from '@/components/Button/IconButton';
+import { Divider } from '@/components/Divider/Divider';
+import { useCurrentMapView, useWatchState } from '@/lib/arcgis/hooks';
+
+import SvgIcon from '../../SvgIcon';
+
+const zoomButton = tv({
+  slots: {
+    wrapper:
+      'pointer-events-auto flex flex-col items-center justify-center rounded-3xl shadow-sm theme-bsk1:rounded-none',
+    button:
+      'border-bottom-none h-8 shadow-none first-of-type:rounded-t-3xl last-of-type:rounded-b-3xl md:h-10 theme-bsk1:rounded-t-none! theme-bsk1:rounded-b-none! theme-bsk1:first-of-type:border-b-0 theme-bsk1:last-of-type:border-t-0',
+  },
+});
+
+function ZoomControl() {
+  const mapView = useCurrentMapView();
+  const canZoomIn = useWatchState(() => mapView?.canZoomIn, [mapView]) ?? false;
+  const canZoomOut = useWatchState(() => mapView?.canZoomOut, [mapView]) ?? false;
+
+  const { wrapper, button } = zoomButton();
+
+  return (
+    <div className={wrapper()}>
+      <IconButton
+        className={button()}
+        icon={<SvgIcon name="icon-add" />}
+        aria-label="Zoom In"
+        isDisabled={!canZoomIn}
+        onPress={() => mapView?.zoomIn()}
+        variant="mapButton"
+        size="md"
+        contained
+      />
+      <Divider className="bg-accent-10 theme-bsk1:bg-gray-8" orientation="horizontal" />
+      <IconButton
+        className={button()}
+        icon={<SvgIcon name="icon-subtract" />}
+        aria-label="Zoom Out"
+        isDisabled={!canZoomOut}
+        onPress={() => mapView?.zoomOut()}
+        variant="mapButton"
+        size="md"
+        contained
+      />
+    </div>
+  );
+}
+
+export default ZoomControl;

@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  test:
+    build:
+      context: ../../
+      dockerfile: e2e/config/Dockerfile.e2e
+    init: true # This is needed for xvfb-run to work
+    ports:
+      - "5173:5173"  # Vite dev server port
+      - "9323:9323"  # Playwright debug port
+    volumes:
+      # Mount source code (node_modules and package-lock.json excluded via .dockerignore)
+      # this is because the install is specific to the OS.
+      - ../../.:/app
+      # Cache layers to improve performance
+      - node_modules:/app/node_modules:delegated
+      # Test artifacts with permissions matching playwright.config.ts paths
+      - ../../e2e/results:/app/e2e/results:rw,delegated
+      - ../../e2e/output:/app/e2e/output
+      - ../../e2e/snapshots:/app/e2e/snapshots
+      - ../../e2e/hars:/app/e2e/hars
+    environment:
+      - TZ=UTC
+      - LANG=en_US.UTF-8
+      - HOST=0.0.0.0
+      - DEBUG=pw:browser*:error
+      - TEST_GREP=${TEST_GREP:-}
+      - PW_SERVER_HOST=0.0.0.0
+      - PW_SERVER_PORT=9323
+      - CI=
+      - UPDATE_SNAPSHOTS=${UPDATE_SNAPSHOTS:-false}
+      - UPDATE_HARS=${UPDATE_HARS:-false}
+    # Using xvfb-run to create a virtual framebuffer, enabling WebGL support
+    # This is crucial for ArcGIS WebScene tests that require GPU acceleration
+    command: |
+      /bin/bash -c '
+        set -ex
+        echo "📦 Installing dependencies and setting up environment..."
+        npm ci
+        apt-get update && apt-get install -y xvfb
+        
+        echo "🎭 Installing Playwright browsers..."
+        npx playwright install --with-deps
+
+        echo "🧪 Running tests..."
+        xvfb-run --auto-servernum \
+          npx playwright test \
+          --config e2e/config/playwright.config.ts \
+          $([ "$UPDATE_SNAPSHOTS" = "true" ] && echo "--update-snapshots") \
+          $([ ! -z "$TEST_GREP" ] && echo "--grep=$TEST_GREP")'
+
+volumes:
+  node_modules:

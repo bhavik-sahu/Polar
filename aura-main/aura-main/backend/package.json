@@ -1,0 +1,17 @@
+{
+  "name": "polar-logistics-backend",
+  "version": "1.0.0",
+  "description": "Integrated Polar Expedition Logistics and Asset Management System - Backend API",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.2.0",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "uuid": "^9.0.1"
+  }
+}

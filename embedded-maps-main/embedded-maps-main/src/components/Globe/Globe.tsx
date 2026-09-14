@@ -1,0 +1,254 @@
+import * as reactiveUtils from '@arcgis/core/core/reactiveUtils.js';
+import Point from '@arcgis/core/geometry/Point';
+import type Viewpoint from '@arcgis/core/Viewpoint';
+import type SceneViewConstraints from '@arcgis/core/views/3d/constraints/Constraints';
+import type SceneViewEnvironment from '@arcgis/core/views/3d/environment/Environment';
+import VirtualLighting from '@arcgis/core/views/3d/environment/VirtualLighting.js';
+import type SceneView from '@arcgis/core/views/SceneView';
+import WebsceneColorBackground from '@arcgis/core/webscene/background/ColorBackground.js';
+import React, { useCallback, useEffect, useState } from 'react';
+import { tv } from 'tailwind-variants';
+
+import { ArcSceneView } from '@/lib/arcgis/components/ArcView/ArcSceneView';
+import { useCurrentMapView, useWatchEffect } from '@/lib/arcgis/hooks';
+import { isEsriPoint } from '@/lib/arcgis/util/geometry';
+import { getLonLatFromMapPoint } from '@/lib/arcgis/util/geometry';
+import { isPolarProjection } from '@/lib/config/basemap';
+import { BBox, MapPoint } from '@/lib/config/schema';
+import { isDefined } from '@/lib/types/typeGuards';
+
+import { useMapInitialisation } from './hooks/useMapInitialisation';
+
+const globe = tv({
+  slots: {
+    wrapper: [
+      // Layout/positioning
+      'pointer-events-none absolute top-0 right-0 grid place-items-center overflow-hidden',
+      // Sizing
+      'size-24 max-h-[min(50cqw,50cqh)] max-w-[min(50cqw,50cqh)] @sm/map-container:size-40 @xl/map-container:size-56 @4xl/map-container:size-72',
+      // Circular and border
+      'rounded-full border-4 border-solid border-seasalt @sm/map-container:border-5 @xl/map-container:border-6 theme-bsk1:border-white',
+      // Shadow
+      'shadow-lg',
+    ],
+    sceneContainer:
+      'pointer-events-none absolute size-[calc((var(--scale-factor)*101%))] max-h-[min(cqw,cqh)] max-w-[min(cqw,cqh)] pb-[2px]',
+    circleDisplayOverlay:
+      'pointer-events-auto z-1 h-full w-full rounded-full bg-[radial-gradient(circle_at_20px_20px,#ffffff8d_20%,#000_80%)] opacity-40 mix-blend-hard-light',
+  },
+});
+
+interface GlobeProps {
+  initialAssetIds?: string[];
+  initialBbox?: BBox[];
+  initialAssetTypes?: string[];
+  initialPoints?: MapPoint[];
+}
+
+const correctViewpointForPoles = ([longitude, latitude]: [number, number]): Point => {
+  // Adjust coordinates near poles (within 0.5 degrees)
+  if (Math.abs(Math.abs(latitude) - 90) < 0.5) {
+    if (latitude > 0) {
+      latitude -= 0.2;
+    } else {
+      latitude += 0.1;
+    }
+  }
+  if (Math.abs(Math.abs(longitude) - 180) < 0.5) {
+    if (longitude > 0) {
+      longitude -= 0.2;
+    } else {
+      longitude += 0.1;
+    }
+  }
+
+  return new Point({ longitude, latitude });
+};
+
+const getCorrectedSceneViewpoint = (mapViewpoint: Viewpoint): Viewpoint | null => {
+  const viewPointTargetGeometry = mapViewpoint.targetGeometry;
+  if (!viewPointTargetGeometry || !isEsriPoint(viewPointTargetGeometry)) {
+    return null;
+  }
+
+  const lonLat = getLonLatFromMapPoint(viewPointTargetGeometry);
+  if (!lonLat) {
+    return null;
+  }
+
+  const newViewPoint = mapViewpoint.clone();
+  newViewPoint.targetGeometry = correctViewpointForPoles([lonLat.longitude, lonLat.latitude]);
+
+  return newViewPoint;
+};
+
+export function Globe({
+  initialAssetIds,
+  initialBbox,
+  initialPoints,
+  initialAssetTypes,
+}: GlobeProps) {
+  const mapView = useCurrentMapView();
+  const [sceneView, setSceneView] = useState<SceneView>();
+  const [isSceneViewLoading, setIsSceneViewLoading] = React.useState(true);
+  const [areLayersLoading, setAreLayersLoading] = React.useState(true);
+
+  const synchroniseSceneView = useCallback(
+    (sceneView: SceneView | undefined) => {
+      if (!sceneView) {
+        return;
+      }
+
+      const correctedViewpoint = getCorrectedSceneViewpoint(mapView.viewpoint);
+
+      if (!correctedViewpoint) {
+        return;
+      }
+
+      try {
+        sceneView.viewpoint = correctedViewpoint;
+        if (mapView.spatialReference?.wkid && isPolarProjection(mapView.spatialReference.wkid)) {
+          const camera = sceneView?.viewpoint.camera?.clone();
+          const cameraPosition = camera?.position?.clone();
+          if (
+            !isDefined(camera) ||
+            !isDefined(cameraPosition) ||
+            !isDefined(cameraPosition.latitude) ||
+            !isDefined(cameraPosition.longitude)
+          ) {
+            return;
+          }
+          const headingCorrection =
+            cameraPosition.latitude < 0 ? -cameraPosition.longitude : cameraPosition.longitude;
+          camera.heading = headingCorrection;
+          sceneView.set('camera', camera);
+        }
+      } catch {
+        // swallow error
+      }
+    },
+    [mapView],
+  );
+
+  const { map, handleViewReady } = useMapInitialisation({
+    initialAssetIds,
+    initialBbox,
+    initialPoints,
+    initialAssetTypes,
+    postLoadCb: (view) => {
+      if (!view || !view.map) {
+        return;
+      }
+      setIsSceneViewLoading(false);
+      const map = view.map;
+      const layers = map.allLayers;
+      Promise.all(layers.map((Layer) => view.whenLayerView(Layer))).then((layerViews) => {
+        Promise.all(
+          layerViews.map((layerView) => reactiveUtils.whenOnce(() => !layerView.updating)),
+        ).then(() => {
+          setAreLayersLoading(false);
+        });
+      });
+    },
+  });
+
+  useWatchEffect(
+    () => mapView.viewpoint,
+    () => {
+      if (mapView.interacting || mapView.animation) {
+        synchroniseSceneView(sceneView);
+      }
+    },
+    {
+      initial: true,
+    },
+  );
+  useWatchEffect(
+    () => sceneView?.viewpoint,
+    () => {
+      if (sceneView?.interacting || sceneView?.animation) {
+        try {
+          mapView?.set('viewpoint', sceneView.viewpoint);
+        } catch {
+          // swallow error
+        }
+      }
+    },
+    {
+      initial: true,
+    },
+  );
+
+  // Prevent focus on ArcSceneView and its children
+  useEffect(() => {
+    if (sceneView) {
+      const container = sceneView.container;
+      if (container) {
+        // Set tabindex on the container itself
+        container.setAttribute('tabindex', '-1');
+
+        // Prevent focus on all child elements recursively
+        const preventFocusOnElement = (element: Element) => {
+          if (element instanceof HTMLElement) {
+            element.setAttribute('tabindex', '-1');
+          }
+
+          // Recursively apply to all children
+          Array.from(element.children).forEach(preventFocusOnElement);
+        };
+
+        // Apply to all existing children
+        preventFocusOnElement(container);
+      }
+    }
+  }, [sceneView]);
+
+  if (!map) {
+    return null;
+  }
+  const { wrapper, sceneContainer, circleDisplayOverlay } = globe();
+
+  return (
+    <div className={wrapper()}>
+      <div
+        tabIndex={-1}
+        className={sceneContainer()}
+        style={{ '--scale-factor': '1.8' } as React.CSSProperties}
+      >
+        <ArcSceneView
+          data-ready={(!isSceneViewLoading && !areLayersLoading).toString()}
+          id="ref-globe"
+          tabIndex={-1}
+          map={map}
+          onarcgisViewReadyChange={(event) => {
+            const sceneView = event.target.view;
+            setSceneView(sceneView);
+            synchroniseSceneView(sceneView);
+            handleViewReady(sceneView);
+          }}
+          environment={
+            {
+              lighting: new VirtualLighting({}),
+              background: new WebsceneColorBackground({
+                color: [0, 0, 0, 0],
+              }),
+              starsEnabled: false,
+              atmosphereEnabled: false,
+            } as unknown as SceneViewEnvironment
+          }
+          constraints={
+            {
+              altitude: {
+                min: 255e5,
+                max: 255e5,
+              },
+            } as SceneViewConstraints
+          }
+          padding={{ top: 0, right: 0, bottom: 0, left: 0 }}
+          zoom={0}
+        />
+      </div>
+      <div className={circleDisplayOverlay()}></div>
+    </div>
+  );
+}
